@@ -24,17 +24,16 @@ module.exports = async function(token, organization = ORGANIZATION_DEFAULT) {
     return collection;
   }, []);
   const resolvedContributors = await contributors;
-  const response = new Map();
   const groupedContributors = resolvedContributors.reduce((acc, currentValue) => {    
-      if (acc.has(currentValue.login)) {
-        const currentContributions = acc.get(currentValue.login).contributions;
+      if (acc[currentValue.login]) {
+        const currentContributions = acc[currentValue.login].contributions;
         const newContributions = currentContributions + currentValue.contributions;
-        acc.set(currentValue.login, {login: currentValue.login, contributions: newContributions});
+        acc[currentValue.login] = {login: currentValue.login, contributions: newContributions};
       } else {
-        acc.set(currentValue.login, {contributions: currentValue.contributions });
+        acc[currentValue.login] = {contributions: currentValue.contributions };
       }
       return acc;
-  }, new Map());
+  }, {});
 
   return groupedContributors;
 };

@@ -5,7 +5,7 @@
 import contributors from '@dianmorales/contributors';
 
 
-const listConstributors = await contributors(token, 'verdaccio');
+const listConstributors = await contributors(token, 'verdaccio', ['verdacciobot']);
 
 {
     contributors: [
