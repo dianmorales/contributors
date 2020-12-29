@@ -1,20 +1,42 @@
 const {Octokit} = require('@octokit/rest');
 const ORGANIZATION_DEFAULT = 'verdaccio';
+const LIMIT_PAGE = 500;
+
+async function getRepositories(octokit, organization) {  
+  const {data} = await octokit.repos.listForOrg({org: organization});
+
+  return data;
+}
+
+exports.getRepositories = getRepositories;
 
 module.exports = async function(token, organization = ORGANIZATION_DEFAULT) {
-  const octokit = new Octokit({auth: token});
-  const {data} = await octokit.repos.listForOrg({org: organization});
-  const contributors = data.reduce(async (acc, currentValue) => {
+  const octokit = new Octokit({auth: token});  
+  const repositories = await getRepositories(octokit, organization);  
+
+  const contributors = repositories.reduce(async (acc, currentValue) => {
     let collection = await acc;
-    const {name, owner} = currentValue;
-    const contributorsData = await octokit.repos.listContributors({owner: owner.login, repo: name, anon: true, per_page: 500});
-    const contributors = contributorsData.data.map((contributor) => contributor.login,
-    ).filter((item) => typeof item !== 'undefined');
+    const {name, owner: { login }} = currentValue;
+    const contributorsData = await octokit.repos.listContributors({owner: login, repo: name, anon: true, per_page: LIMIT_PAGE});
+    const contributors = contributorsData.data.map(({login, contributions}) => ({login, contributions}),
+    ).filter((item) => typeof item.login !== 'undefined');    
     collection = collection.concat(contributors);
     return collection;
   }, []);
+  const resolvedContributors = await contributors;
+  const response = new Map();
+  const groupedContributors = resolvedContributors.reduce((acc, currentValue) => {    
+      if (acc.has(currentValue.login)) {
+        const currentContributions = acc.get(currentValue.login).contributions;
+        const newContributions = currentContributions + currentValue.contributions;
+        acc.set(currentValue.login, {login: currentValue.login, contributions: newContributions});
+      } else {
+        acc.set(currentValue.login, {contributions: currentValue.contributions });
+      }
+      return acc;
+  }, new Map());
 
-  return [...new Set(await contributors)];
+  return groupedContributors;
 };
 
 
