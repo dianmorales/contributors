@@ -1,11 +1,12 @@
 {
-  "name": "contributors",
-  "version": "1.0.0",
+  "name": "@dianmorales/contributors",
+  "version": "1.0.2",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "lint": "eslint .",
-    "test": "jest"
+    "test": "jest",
+    "start": "node dev.js"
   },
   "keywords": [],
   "author": "",
