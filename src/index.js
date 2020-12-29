@@ -1,10 +1,9 @@
-require('dotenv').config();
 const {Octokit} = require('@octokit/rest');
-const octokit = new Octokit({auth: process.env.TOKEN});
-const ORGANIZATION = 'verdaccio';
+const ORGANIZATION_DEFAULT = 'verdaccio';
 
-module.exports = async function() {
-  const {data} = await octokit.repos.listForOrg({org: ORGANIZATION});
+module.exports = async function(token, organization = ORGANIZATION_DEFAULT) {
+  const octokit = new Octokit({auth: token});
+  const {data} = await octokit.repos.listForOrg({org: organization});
   const contributors = data.reduce(async (acc, currentValue) => {
     let collection = await acc;
     const {name, owner} = currentValue;
