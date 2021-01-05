@@ -15,29 +15,39 @@ module.exports = async function(token, organization = ORGANIZATION_DEFAULT) {
   const repositories = await getRepositories(octokit, organization);  
 
   const contributors = repositories.reduce(async (acc, currentValue) => {
-    let collection = await acc;
+    let collection = await acc;  
     const {name, owner: { login }} = currentValue;
     const contributorsData = await octokit.repos.listContributors({owner: login, repo: name, anon: true, per_page: LIMIT_PAGE});
-    const contributors = contributorsData.data.map(({login, contributions}) => ({login, contributions}),
+    const contributors = contributorsData.data.map(({login, contributions, id}) => ({login, contributions, id}),
     ).filter((item) => typeof item.login !== 'undefined');    
     collection = collection.concat(contributors);
     return collection;
   }, []);
   const resolvedContributors = await contributors;
   const groupedContributors = resolvedContributors.reduce((acc, currentValue) => {    
-      if (acc[currentValue.login]) {
-        const currentContributions = acc[currentValue.login].contributions;
-        const newContributions = currentContributions + currentValue.contributions;
-        acc[currentValue.login] = {login: currentValue.login, contributions: newContributions};
-      } else {
-        acc[currentValue.login] = {contributions: currentValue.contributions };
+    if (acc[currentValue.login]) {
+       const currentContributions = acc[currentValue.login].contributions;
+      const newContributions = currentContributions + currentValue.contributions;
+      acc[currentValue.login] = {id: currentValue.id, login: currentValue.login, contributions: newContributions};
+    } else {
+        acc[currentValue.login] = {id: currentValue.id, login: currentValue.login, contributions: currentValue.contributions};
       }
       return acc;
   }, {});
 
-  return groupedContributors;
+ const itemsValues = Object.values(groupedContributors);
+ const sortedValues = itemsValues.sort((a, b) => { 
+     return b.contributions - a.contributions;
+ });
+    return sortedValues;
 };
 
+//  juanpicado: { login: 'juanpicado', contributions: 4096 },
+
+
+
+// Agregar id al objecto
+// Ordenar descendente la lista
 
 // octokit.repos.listContributors({owner: 'juanpicado', repo: 'verdaccio', anon:true, per_page:100}).then((response) => {
 // console.log('response', response);
