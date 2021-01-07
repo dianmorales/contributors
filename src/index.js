@@ -18,7 +18,7 @@ module.exports = async function(token, organization = ORGANIZATION_DEFAULT) {
     let collection = await acc;  
     const {name, owner: { login }} = currentValue;
     const contributorsData = await octokit.repos.listContributors({owner: login, repo: name, anon: true, per_page: LIMIT_PAGE});
-    const filterLogin = '';
+    const filterLogins = [];
     const contributors = contributorsData.data.map(({login, contributions, id}) => ({login, contributions, id}),
     ).filter((item) => typeof item.login !== 'undefined');    
     collection = collection.concat(contributors);
