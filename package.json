@@ -21,7 +21,7 @@
     "eslint-config-google": "^0.14.0",
     "jest": "^26.6.1"
   },
-  "files": ["src/index.js"]
-
-
+  "files": [
+    "src/index.js"
+  ]
 }
