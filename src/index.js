@@ -1,5 +1,5 @@
 const {Octokit} = require('@octokit/rest');
-const ORGANIZATION_DEFAULT = 'verdaccio'; 
+const ORGANIZATION_DEFAULT = 'verdaccio';
 const LIMIT_PAGE = 500;
 
 // eslint-disable-next-line require-jsdoc
@@ -19,7 +19,7 @@ module.exports = async function(token, organization = ORGANIZATION_DEFAULT) {
 
   const contributors = repositories.reduce(async (acc, currentValue) => {
     let collection = await acc;
-    const {name, owner: {login}} = currentValue;
+    const {name, owner: {login}, full_name,  html_url, description, stargazers_count, watchers, archived} = currentValue;
 
     // Contributors by a specific repository 
     const contributorsData = await octokit.repos.listContributors({owner: login, repo: name, anon: true, per_page: LIMIT_PAGE});
@@ -30,6 +30,12 @@ module.exports = async function(token, organization = ORGANIZATION_DEFAULT) {
         repository: name,
         contributions,
         id,
+        full_name: full_name,
+        html_url: html_url,
+        description: description,
+        stargazers_count: stargazers_count,
+        watchers: watchers,
+        archived: archived,
       };
     }).filter((item) => typeof item.login !== 'undefined');
     collection = collection.concat(contributors);
@@ -43,10 +49,19 @@ module.exports = async function(token, organization = ORGANIZATION_DEFAULT) {
     // if a contributor already exist and has contribute in other repositories
     if (acc[currentValue.login]) {
       const currentContributions = acc[currentValue.login].contributions;
-      const currentRepositories = acc[currentValue.login].repositories;
+      let currentRepositories = acc[currentValue.login].repositories;
       currentRepositories.push({
         name: currentValue.repository,
         contributions: currentValue.contributions,
+        full_name: currentValue.full_name,
+        html_url: currentValue.html_url,
+        description: currentValue.description,
+        watchers: currentValue.watchers,
+        staergezers: currentValue.stargazers_count,
+        archived: currentValue.archived,
+      });
+      currentRepositories = currentRepositories.sort((a, b) => {
+        return b.contributions - a.contributions;
       });
       const newContributions = currentContributions + currentValue.contributions;
       acc[currentValue.login] = {id: currentValue.id, login: currentValue.login, contributions: newContributions, repositories: currentRepositories};
@@ -56,6 +71,12 @@ module.exports = async function(token, organization = ORGANIZATION_DEFAULT) {
         {
           name: currentValue.repository,
           contributions: currentValue.contributions,
+          full_name: currentValue.full_name,
+          html_url: currentValue.html_url,
+          description: currentValue.description,
+          watchers: currentValue.watchers,
+          staergezers: currentValue.stargazers_count,
+          archived: currentValue.archived,
         },
       ]};
     }
