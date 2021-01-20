@@ -1,11 +1,11 @@
 const {Octokit} = require('@octokit/rest');
 const ORGANIZATION_DEFAULT = 'verdaccio';
 const LIMIT_PAGE = 500;
+const LIMIT_PER_PAGE =100;
 
 // eslint-disable-next-line require-jsdoc
 async function getRepositories(octokit, organization) {
-  const {data} = await octokit.repos.listForOrg({org: organization});
-
+  const {data} = await octokit.repos.listForOrg({org: organization, per_page: LIMIT_PER_PAGE});
   return data;
 }
 
