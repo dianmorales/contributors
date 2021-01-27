@@ -1,5 +1,5 @@
 const {Octokit} = require('@octokit/rest');
-const ORGANIZATION_DEFAULT = 'verdaccio';
+const debug = require('debug')('contributors');
 const LIMIT_PAGE = 500;
 const LIMIT_PER_PAGE =100;
 
@@ -11,18 +11,24 @@ async function getRepositories(octokit, organization) {
 
 exports.getRepositories = getRepositories;
 
-module.exports = async function(token, organization = ORGANIZATION_DEFAULT) {
+module.exports = async function(token, organization, excludebots) {
   const octokit = new Octokit({auth: token});
-
   // Repositories for an Organization
   const repositories = await getRepositories(octokit, organization);
+  debug('repositories %o', repositories);
 
   const contributors = repositories.reduce(async (acc, currentValue) => {
     let collection = await acc;
-    const {name, owner: {login}, full_name,  html_url, description, stargazers_count, watchers, archived} = currentValue;
+    const {name, owner: {login}, full_name, html_url, description, stargazers_count, watchers, archived} = currentValue;
+    debug('name %o', name);
+    debug('login %o', login);
+    debug('full_name %o', full_name);
+    debug('filter bots: %o', excludebots);
 
-    // Contributors by a specific repository 
+    // Contributors by a specific repository
     const contributorsData = await octokit.repos.listContributors({owner: login, repo: name, anon: true, per_page: LIMIT_PAGE});
+    debug('contributors data:  %o', contributorsData);
+
     // Filter out invalid contributors (undefined, etc).
     const contributors = contributorsData.data.map(function({login, contributions, id}) {
       return {
@@ -37,13 +43,14 @@ module.exports = async function(token, organization = ORGANIZATION_DEFAULT) {
         watchers: watchers,
         archived: archived,
       };
-    }).filter((item) => typeof item.login !== 'undefined');
+    }).filter((item) => (typeof item.login !== 'undefined')).filter((item) => !excludebots.includes(item.login));
     collection = collection.concat(contributors);
     return collection;
   }, []);
 
 
   const resolvedContributors = await contributors;
+  debug('resolvedContributors:  %o', resolvedContributors);
   // Group Contributors inside an Organization
   const groupedContributors = resolvedContributors.reduce((acc, currentValue) => {
     // if a contributor already exist and has contribute in other repositories
