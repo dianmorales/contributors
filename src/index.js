@@ -4,6 +4,11 @@ const debug = require('debug')('contributors');
 const LIMIT_PAGE = 500;
 const LIMIT_PER_PAGE = 100;
 
+/* Retrieve repositories
+not fork
+not
+ */
+
 // eslint-disable-next-line require-jsdoc
 async function getRepositories(octokit, organization) {
   const {data} = await octokit.repos.listForOrg({
@@ -15,7 +20,7 @@ async function getRepositories(octokit, organization) {
 
 exports.getRepositories = getRepositories;
 
-module.exports = async function(token, organization, excludebots = []) {
+module.exports = async function({token, organization, excludebots = []}) {
   const octokit = new Octokit({auth: token});
   // Repositories for an Organization
   const repositories = await getRepositories(octokit, organization);
