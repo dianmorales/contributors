@@ -19,8 +19,6 @@ async function getRepositories(
       .filter((item) => {
         if (item.private) {
           debug('Repo %s is private', item.name);
-          console.log('ITEM ----> ', item.name);
-          console.log('allowPrivateRepo ----> ', item.private);
           return allowPrivateRepo;
         }
 
@@ -30,8 +28,6 @@ async function getRepositories(
       .filter((item) => {
         if (item.fork) {
           debug('Repo %s is fork', item.name);
-          console.log('ITEM ----> ', item.name);
-          console.log('allowFork ----> ', item.fork);
           return allowFork;
         }
 
@@ -58,8 +54,7 @@ module.exports = async function({
       allowPrivateRepo,
   );
   debug('repositories %o', repositories.length);
-  console.log('DATA REPO SIZE  1--> ', repositories.length);
-
+ 
   const contributors = repositories.reduce(async (acc, currentValue) => {
     let collection = await acc;
     const {
