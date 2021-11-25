@@ -1,41 +1,68 @@
 /* eslint-disable camelcase */
 const {Octokit} = require('@octokit/rest');
 const debug = require('debug')('contributors');
-const LIMIT_PAGE = 500;
-const LIMIT_PER_PAGE = 100;
+const RESULTS_MAX_PER_PAGE = 100;
 
 /* Retrieve repositories
 not fork
 not
  */
-
 // eslint-disable-next-line require-jsdoc
-async function getRepositories(octokit, organization, allowFork, allowPrivateRepo) {
+async function getRepositories(
+    octokit,
+    organization,
+    allowFork,
+    allowPrivateRepo,
+) {
   const {data} = await octokit.repos.listForOrg({
     org: organization,
-    per_page: LIMIT_PER_PAGE,
+    per_page: 60,
   });
-  // .filter((item) => typeof item.login !== 'undefined')
-  return data.filter((item) => {
-    if (item.private) {
-      debug('Repo %s is private', item.name);
-    }
-    return (item.private !== allowPrivateRepo);
-  }).filter((item) => {
-    if (item.fork) {
-      debug('Repo %s is fork', item.name);
-    }
-    return (item.fork !== allowFork);
-  });
+
+  return data
+      .filter((item) => {
+        if (item.private) {
+          debug('Repo %s is private', item.name);
+          console.log('ITEM ----> ', item.name);
+          console.log('allowPrivateRepo ----> ', item.private);
+          return allowPrivateRepo;
+        }
+
+        // if is not private, we always include it.
+        return true;
+      })
+      .filter((item) => {
+        if (item.fork) {
+          debug('Repo %s is fork', item.name);
+          console.log('ITEM ----> ', item.name);
+          console.log('allowFork ----> ', item.fork);
+          return allowFork;
+        }
+
+        // all non fork are included
+        return true;
+      });
 }
 // private, fork
 exports.getRepositories = getRepositories;
 
-module.exports = async function({token, organization, excludebots = []}, allowFork = true, allowPrivateRepo = true) {
+module.exports = async function({
+  token,
+  organization,
+  excludebots = [],
+  allowFork = true,
+  allowPrivateRepo = true,
+}) {
   const octokit = new Octokit({auth: token});
   // Repositories for an Organization
-  const repositories = await getRepositories(octokit, organization, allowFork, allowPrivateRepo);
+  const repositories = await getRepositories(
+      octokit,
+      organization,
+      allowFork,
+      allowPrivateRepo,
+  );
   debug('repositories %o', repositories.length);
+  console.log('DATA REPO SIZE  1--> ', repositories.length);
 
   const contributors = repositories.reduce(async (acc, currentValue) => {
     let collection = await acc;
@@ -55,13 +82,26 @@ module.exports = async function({token, organization, excludebots = []}, allowFo
     debug('filter bots: %o', excludebots);
 
     // Contributors by a specific repository
-    const contributorsData = await octokit.repos.listContributors({
-      owner: login,
-      repo: name,
-      anon: true,
-      per_page: LIMIT_PAGE,
-    });
-    const listContributors = contributorsData.data ? contributorsData.data : [];
+    const listContributors = [];
+    let page = 1;
+    while (true) {
+      const result = await octokit.repos.listContributors({
+        owner: login,
+        repo: name,
+        anon: true,
+        page,
+        per_page: RESULTS_MAX_PER_PAGE,
+      });
+      if (result.data.length > 0) {
+        debug('%s new contributors found for %s', result.data.length, name);
+        listContributors.push(...result.data);
+        page++;
+      } else {
+        debug('no more contributors added to %s', name);
+        break;
+      }
+    }
+
     // Filter out invalid contributors (undefined, etc).
     const contributors = listContributors
         .map(function({login, contributions, id}) {
