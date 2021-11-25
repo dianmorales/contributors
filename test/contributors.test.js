@@ -1,9 +1,12 @@
 const contributors = require('../src');
 const nock = require('nock');
 
+const repositoryApiUrl =`/orgs/organization1/repos?per_page=100`;
+const repositoryContributorsPageApiUrl = (repositoryName, pageNumber) => `/repos/organization1/${repositoryName}/contributors?anon=true&per_page=100&page=${pageNumber}`;
+
 test('repositories test', async () => {
   nock('https://api.github.com')
-      .get('/orgs/organization1/repos?per_page=100')
+      .get(repositoryApiUrl)
       .reply(200, [
         {
           name: 'repository1',
@@ -18,14 +21,16 @@ test('repositories test', async () => {
           archived: false,
           watchers: 11079,
         }])
-      .get('/repos/organization1/repository1/contributors?anon=true&per_page=500')
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
       .reply(200, [
         {
           login: 'user1',
           id: 558752,
           contributions: 6,
         },
-      ]);
+      ])
+      .get(repositoryContributorsPageApiUrl('repository1', 2))
+      .reply(200, []);
   const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: []});
   expect(listContributors).toHaveLength(1);
 }, 100);
@@ -33,7 +38,7 @@ test('repositories test', async () => {
 
 test('contributors test exclude bots', async () => {
   nock('https://api.github.com')
-      .get('/orgs/organization1/repos?per_page=100')
+      .get(repositoryApiUrl)
       .reply(200, [
         {
           name: 'repository1',
@@ -62,7 +67,7 @@ test('contributors test exclude bots', async () => {
           watchers: 11079,
         },
       ])
-      .get('/repos/organization1/repository1/contributors?anon=true&per_page=500')
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
       .reply(200, [
         {
           login: 'user1',
@@ -74,8 +79,9 @@ test('contributors test exclude bots', async () => {
           contributions: 20,
           id: 252525,
         },
-      ])
-      .get('/repos/organization1/repository2/contributors?anon=true&per_page=500')
+      ]) .get(repositoryContributorsPageApiUrl('repository1', 2))
+      .reply(200, [])
+      .get(repositoryContributorsPageApiUrl('repository2', 1))
       .reply(200, [
         {
           login: 'user1',
@@ -87,7 +93,8 @@ test('contributors test exclude bots', async () => {
           id: 453621,
           contributions: 3,
         },
-      ]);
+      ]) .get(repositoryContributorsPageApiUrl('repository2', 2))
+      .reply(200, []);
   const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: ['user-bot']});
   expect(listContributors).toHaveLength(2);
   expect(listContributors[0].login).not.toBe('user-bot');
@@ -97,7 +104,7 @@ test('contributors test exclude bots', async () => {
 
 test('Sum of all Contributions and sorted Desc', async () => {
   nock('https://api.github.com')
-      .get('/orgs/organization1/repos?per_page=100')
+      .get(repositoryApiUrl)
       .reply(200, [
         {
           name: 'repository1',
@@ -126,7 +133,7 @@ test('Sum of all Contributions and sorted Desc', async () => {
           watchers: 11079,
         },
       ])
-      .get('/repos/organization1/repository1/contributors?anon=true&per_page=500')
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
       .reply(200, [
         {
           login: 'user1',
@@ -139,7 +146,9 @@ test('Sum of all Contributions and sorted Desc', async () => {
           id: 252525,
         },
       ])
-      .get('/repos/organization1/repository2/contributors?anon=true&per_page=500')
+      .get(repositoryContributorsPageApiUrl('repository1', 2))
+      .reply(200, [])
+      .get(repositoryContributorsPageApiUrl('repository2', 1))
       .reply(200, [
         {
           login: 'user1',
@@ -151,7 +160,8 @@ test('Sum of all Contributions and sorted Desc', async () => {
           id: 453621,
           contributions: 3,
         },
-      ]);
+      ]).get(repositoryContributorsPageApiUrl('repository2', 2))
+      .reply(200, []);
   const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: ['user-bot']});
   expect(listContributors).toHaveLength(2);
   expect(listContributors[0].login).toBe('user2');
@@ -163,7 +173,7 @@ test('Sum of all Contributions and sorted Desc', async () => {
 
 test('Group repositories by contributor', async () => {
   nock('https://api.github.com')
-      .get('/orgs/organization1/repos?per_page=100')
+      .get(repositoryApiUrl)
       .reply(200, [
         {
           name: 'repository1',
@@ -192,7 +202,7 @@ test('Group repositories by contributor', async () => {
           watchers: 11079,
         },
       ])
-      .get('/repos/organization1/repository1/contributors?anon=true&per_page=500')
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
       .reply(200, [
         {
           login: 'user1',
@@ -205,14 +215,17 @@ test('Group repositories by contributor', async () => {
           id: 252525,
         },
       ])
-      .get('/repos/organization1/repository2/contributors?anon=true&per_page=500')
+      .get(repositoryContributorsPageApiUrl('repository1', 2))
+      .reply(200, [])
+      .get(repositoryContributorsPageApiUrl('repository2', 1))
       .reply(200, [
         {
           login: 'user1',
           id: 558752,
           contributions: 15,
         },
-      ]);
+      ]) .get(repositoryContributorsPageApiUrl('repository2', 2))
+      .reply(200, []);
   const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: []});
 
   expect(listContributors).toHaveLength(2);
@@ -228,7 +241,7 @@ test('Group repositories by contributor', async () => {
 
 test('Sort repositories by number of contributions desc', async () => {
   nock('https://api.github.com')
-      .get('/orgs/organization1/repos?per_page=100')
+      .get(repositoryApiUrl)
       .reply(200, [
         {
           name: 'repository1',
@@ -257,7 +270,7 @@ test('Sort repositories by number of contributions desc', async () => {
           watchers: 11079,
         },
       ])
-      .get('/repos/organization1/repository1/contributors?anon=true&per_page=500')
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
       .reply(200, [
         {
           login: 'user1',
@@ -269,15 +282,17 @@ test('Sort repositories by number of contributions desc', async () => {
           contributions: 10,
           id: 252525,
         },
-      ])
-      .get('/repos/organization1/repository2/contributors?anon=true&per_page=500')
+      ]) .get(repositoryContributorsPageApiUrl('repository1', 2))
+      .reply(200, [])
+      .get(repositoryContributorsPageApiUrl('repository2', 1))
       .reply(200, [
         {
           login: 'user1',
           id: 558752,
           contributions: 15,
         },
-      ]);
+      ]) .get(repositoryContributorsPageApiUrl('repository2', 2))
+      .reply(200, []);
   const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: []});
   expect(listContributors).toHaveLength(2);
   expect(listContributors[0].login).toBe('user1');
@@ -292,7 +307,7 @@ test('Sort repositories by number of contributions desc', async () => {
 
 test('test Contributors properties', async () => {
   nock('https://api.github.com')
-      .get('/orgs/organization1/repos?per_page=100')
+      .get(repositoryApiUrl)
       .reply(200, [
         {
           name: 'repository1',
@@ -308,14 +323,15 @@ test('test Contributors properties', async () => {
           watchers: 10,
         },
       ])
-      .get('/repos/organization1/repository1/contributors?anon=true&per_page=500')
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
       .reply(200, [
         {
           login: 'user1',
           id: 558752,
           contributions: 44,
         },
-      ]);
+      ]).get(repositoryContributorsPageApiUrl('repository1', 2))
+      .reply(200, []);
 
   const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: []});
   expect(listContributors).toHaveLength(1);
@@ -352,9 +368,69 @@ test('test repositories without contributors', async () => {
           watchers: 10,
         },
       ])
-      .get('/repos/organization1/repository1/contributors?anon=true&per_page=500')
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
       .reply(200, []);
 
   const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: []});
   expect(listContributors).toHaveLength(0);
+}, 100);
+
+test('repositories test', async () => {
+  nock('https://api.github.com')
+      .get(repositoryApiUrl)
+      .reply(200, [
+        {
+          name: 'repository1',
+          full_name: 'organization1/repository1',
+          owner: {
+            login: 'organization1',
+          },
+          html_url: 'https://github.com/organization1/repository1',
+          description: '📦🔐A lightweight private proxy registry build in Node.js',
+          stargazers_count: 11079,
+          watchers_count: 11079,
+          archived: false,
+          watchers: 11079,
+        }])
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
+      .reply(200, [
+        {
+          login: 'user1',
+          id: 558752,
+          contributions: 6,
+        },
+      ]).get(repositoryContributorsPageApiUrl('repository1', 2))
+      .reply(200, []);
+  const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: []});
+  expect(listContributors).toHaveLength(1);
+}, 100);
+
+test('repositories test', async () => {
+  nock('https://api.github.com')
+      .get(repositoryApiUrl)
+      .reply(200, [
+        {
+          name: 'repository1',
+          full_name: 'organization1/repository1',
+          owner: {
+            login: 'organization1',
+          },
+          html_url: 'https://github.com/organization1/repository1',
+          description: '📦🔐A lightweight private proxy registry build in Node.js',
+          stargazers_count: 11079,
+          watchers_count: 11079,
+          archived: false,
+          watchers: 11079,
+        }])
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
+      .reply(200, [
+        {
+          login: 'user1',
+          id: 558752,
+          contributions: 6,
+        },
+      ]).get(repositoryContributorsPageApiUrl('repository1', 2))
+      .reply(200, []);
+  const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: []});
+  expect(listContributors).toHaveLength(1);
 }, 100);
