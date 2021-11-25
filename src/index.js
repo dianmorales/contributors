@@ -4,18 +4,13 @@ const debug = require('debug')('contributors');
 const LIMIT_PAGE = 500;
 const LIMIT_PER_PAGE = 100;
 
-/* Retrieve repositories
-not fork
-not
- */
-
 // eslint-disable-next-line require-jsdoc
 async function getRepositories(octokit, organization, allowFork, allowPrivateRepo) {
   const {data} = await octokit.repos.listForOrg({
     org: organization,
     per_page: LIMIT_PER_PAGE,
   });
-  // .filter((item) => typeof item.login !== 'undefined')
+
   return data.filter((item) => {
     if (item.private) {
       debug('Repo %s is private', item.name);
@@ -28,7 +23,7 @@ async function getRepositories(octokit, organization, allowFork, allowPrivateRep
     return (item.fork !== allowFork);
   });
 }
-// private, fork
+
 exports.getRepositories = getRepositories;
 
 module.exports = async function({token, organization, excludebots = []}, allowFork = true, allowPrivateRepo = true) {
