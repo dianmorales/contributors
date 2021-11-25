@@ -54,7 +54,7 @@ module.exports = async function({
       allowPrivateRepo,
   );
   debug('repositories %o', repositories.length);
- 
+
   const contributors = repositories.reduce(async (acc, currentValue) => {
     let collection = await acc;
     const {
