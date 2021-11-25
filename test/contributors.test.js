@@ -1,14 +1,10 @@
 const contributors = require('../src');
 const nock = require('nock');
-//`Thanks for getting this into V8, ${user.name.toUpperCase()}.
-const name = 'organization1';
-const repo = `/orgs/${name}/repos?per_page=100`;
-const repositoryApiUrl = repo;
-const repositoryContributorsPageApiUrl1 = '/repos/organization1/repository1/contributors?anon=true&per_page=100&page=';
-const repositoryContributorsPageApiUrl2 = '/repos/organization1/repository2/contributors?anon=true&per_page=100&page=';
 
+const repositoryApiUrl =`/orgs/organization1/repos?per_page=100`;
+const repositoryContributorsPageApiUrl = (repositoryName, pageNumber) => `/repos/organization1/${repositoryName}/contributors?anon=true&per_page=100&page=${pageNumber}`;
 
-test.only('repositories test', async () => {
+test('repositories test', async () => {
   nock('https://api.github.com')
       .get(repositoryApiUrl)
       .reply(200, [
@@ -25,7 +21,7 @@ test.only('repositories test', async () => {
           archived: false,
           watchers: 11079,
         }])
-      .get(repositoryContributorsPageApiUrl1 + 1)
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
       .reply(200, [
         {
           login: 'user1',
@@ -33,7 +29,7 @@ test.only('repositories test', async () => {
           contributions: 6,
         },
       ])
-      .get(repositoryContributorsPageApiUrl1 + 2)
+      .get(repositoryContributorsPageApiUrl('repository1', 2))
       .reply(200, []);
   const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: []});
   expect(listContributors).toHaveLength(1);
@@ -71,7 +67,7 @@ test('contributors test exclude bots', async () => {
           watchers: 11079,
         },
       ])
-      .get(repositoryContributorsPageApiUrl1 + 1)
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
       .reply(200, [
         {
           login: 'user1',
@@ -83,9 +79,9 @@ test('contributors test exclude bots', async () => {
           contributions: 20,
           id: 252525,
         },
-      ]) .get(repositoryContributorsPageApiUrl1 + 2)
+      ]) .get(repositoryContributorsPageApiUrl('repository1', 2))
       .reply(200, [])
-      .get(repositoryContributorsPageApiUrl2 + 1)
+      .get(repositoryContributorsPageApiUrl('repository2', 1))
       .reply(200, [
         {
           login: 'user1',
@@ -97,7 +93,7 @@ test('contributors test exclude bots', async () => {
           id: 453621,
           contributions: 3,
         },
-      ]) .get(repositoryContributorsPageApiUrl2 + 2)
+      ]) .get(repositoryContributorsPageApiUrl('repository2', 2))
       .reply(200, []);
   const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: ['user-bot']});
   expect(listContributors).toHaveLength(2);
@@ -137,7 +133,7 @@ test('Sum of all Contributions and sorted Desc', async () => {
           watchers: 11079,
         },
       ])
-      .get(repositoryContributorsPageApiUrl1 + 1)
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
       .reply(200, [
         {
           login: 'user1',
@@ -150,9 +146,9 @@ test('Sum of all Contributions and sorted Desc', async () => {
           id: 252525,
         },
       ])
-      .get(repositoryContributorsPageApiUrl1 + 2)
+      .get(repositoryContributorsPageApiUrl('repository1', 2))
       .reply(200, [])
-      .get(repositoryContributorsPageApiUrl2 + 1)
+      .get(repositoryContributorsPageApiUrl('repository2', 1))
       .reply(200, [
         {
           login: 'user1',
@@ -164,7 +160,7 @@ test('Sum of all Contributions and sorted Desc', async () => {
           id: 453621,
           contributions: 3,
         },
-      ]).get(repositoryContributorsPageApiUrl2 + 2)
+      ]).get(repositoryContributorsPageApiUrl('repository2', 2))
       .reply(200, []);
   const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: ['user-bot']});
   expect(listContributors).toHaveLength(2);
@@ -206,7 +202,7 @@ test('Group repositories by contributor', async () => {
           watchers: 11079,
         },
       ])
-      .get(repositoryContributorsPageApiUrl1 +1)
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
       .reply(200, [
         {
           login: 'user1',
@@ -219,16 +215,16 @@ test('Group repositories by contributor', async () => {
           id: 252525,
         },
       ])
-      .get(repositoryContributorsPageApiUrl1 + 2)
+      .get(repositoryContributorsPageApiUrl('repository1', 2))
       .reply(200, [])
-      .get(repositoryContributorsPageApiUrl2 + 1)
+      .get(repositoryContributorsPageApiUrl('repository2', 1))
       .reply(200, [
         {
           login: 'user1',
           id: 558752,
           contributions: 15,
         },
-      ]) .get(repositoryContributorsPageApiUrl2 + 2)
+      ]) .get(repositoryContributorsPageApiUrl('repository2', 2))
       .reply(200, []);
   const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: []});
 
@@ -274,7 +270,7 @@ test('Sort repositories by number of contributions desc', async () => {
           watchers: 11079,
         },
       ])
-      .get(repositoryContributorsPageApiUrl1 + 1)
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
       .reply(200, [
         {
           login: 'user1',
@@ -286,16 +282,16 @@ test('Sort repositories by number of contributions desc', async () => {
           contributions: 10,
           id: 252525,
         },
-      ]) .get(repositoryContributorsPageApiUrl1 + 2)
+      ]) .get(repositoryContributorsPageApiUrl('repository1', 2))
       .reply(200, [])
-      .get(repositoryContributorsPageApiUrl2 + 1)
+      .get(repositoryContributorsPageApiUrl('repository2', 1))
       .reply(200, [
         {
           login: 'user1',
           id: 558752,
           contributions: 15,
         },
-      ]) .get(repositoryContributorsPageApiUrl2 + 2)
+      ]) .get(repositoryContributorsPageApiUrl('repository2', 2))
       .reply(200, []);
   const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: []});
   expect(listContributors).toHaveLength(2);
@@ -327,14 +323,14 @@ test('test Contributors properties', async () => {
           watchers: 10,
         },
       ])
-      .get(repositoryContributorsPageApiUrl1+1)
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
       .reply(200, [
         {
           login: 'user1',
           id: 558752,
           contributions: 44,
         },
-      ]).get(repositoryContributorsPageApiUrl1 + 2)
+      ]).get(repositoryContributorsPageApiUrl('repository1', 2))
       .reply(200, []);
 
   const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: []});
@@ -372,7 +368,7 @@ test('test repositories without contributors', async () => {
           watchers: 10,
         },
       ])
-      .get(repositoryContributorsPageApiUrl1 + 1)
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
       .reply(200, []);
 
   const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: []});
@@ -396,14 +392,14 @@ test('repositories test', async () => {
           archived: false,
           watchers: 11079,
         }])
-      .get(repositoryContributorsPageApiUrl1 + 1)
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
       .reply(200, [
         {
           login: 'user1',
           id: 558752,
           contributions: 6,
         },
-      ]).get(repositoryContributorsPageApiUrl1 + 2)
+      ]).get(repositoryContributorsPageApiUrl('repository1', 2))
       .reply(200, []);
   const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: []});
   expect(listContributors).toHaveLength(1);
@@ -426,18 +422,15 @@ test('repositories test', async () => {
           archived: false,
           watchers: 11079,
         }])
-      .get(repositoryContributorsPageApiUrl1 + 1)
+      .get(repositoryContributorsPageApiUrl('repository1', 1))
       .reply(200, [
         {
           login: 'user1',
           id: 558752,
           contributions: 6,
         },
-      ]).get(repositoryContributorsPageApiUrl1 + 2)
+      ]).get(repositoryContributorsPageApiUrl('repository1', 2))
       .reply(200, []);
   const listContributors = await contributors({token: '12345', organization: 'organization1', excludebots: []});
   expect(listContributors).toHaveLength(1);
 }, 100);
-
-
- 
