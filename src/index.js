@@ -12,7 +12,7 @@ async function getRepositories(
 ) {
   const {data} = await octokit.repos.listForOrg({
     org: organization,
-    per_page: 60,
+    per_page: RESULTS_MAX_PER_PAGE,
   });
 
   return data
