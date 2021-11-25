@@ -5,21 +5,32 @@ const LIMIT_PAGE = 500;
 const LIMIT_PER_PAGE = 100;
 
 // eslint-disable-next-line require-jsdoc
-async function getRepositories(octokit, organization) {
+async function getRepositories(octokit, organization, allowFork, allowPrivateRepo) {
   const {data} = await octokit.repos.listForOrg({
     org: organization,
     per_page: LIMIT_PER_PAGE,
   });
-  return data;
+
+  return data.filter((item) => {
+    if (item.private) {
+      debug('Repo %s is private', item.name);
+    }
+    return (item.private !== allowPrivateRepo);
+  }).filter((item) => {
+    if (item.fork) {
+      debug('Repo %s is fork', item.name);
+    }
+    return (item.fork !== allowFork);
+  });
 }
 
 exports.getRepositories = getRepositories;
 
-module.exports = async function(token, organization, excludebots = []) {
+module.exports = async function({token, organization, excludebots = []}, allowFork = true, allowPrivateRepo = true) {
   const octokit = new Octokit({auth: token});
   // Repositories for an Organization
-  const repositories = await getRepositories(octokit, organization);
-  debug('repositories %o', repositories);
+  const repositories = await getRepositories(octokit, organization, allowFork, allowPrivateRepo);
+  debug('repositories %o', repositories.length);
 
   const contributors = repositories.reduce(async (acc, currentValue) => {
     let collection = await acc;
@@ -45,7 +56,6 @@ module.exports = async function(token, organization, excludebots = []) {
       anon: true,
       per_page: LIMIT_PAGE,
     });
-    debug('contributors data:  %o', contributorsData);
     const listContributors = contributorsData.data ? contributorsData.data : [];
     // Filter out invalid contributors (undefined, etc).
     const contributors = listContributors
@@ -70,7 +80,7 @@ module.exports = async function(token, organization, excludebots = []) {
   }, []);
 
   const resolvedContributors = await contributors;
-  debug('resolvedContributors:  %o', resolvedContributors);
+  debug('resolvedContributors:  %o', resolvedContributors.length);
   // Group Contributors inside an Organization
   const groupedContributors = resolvedContributors.reduce(
       (acc, currentValue) => {
