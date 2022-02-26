@@ -7,3 +7,4 @@ coverage/*
 .vscode/launch.json
 example.js
 .vscode/launch.json
+dist/*
