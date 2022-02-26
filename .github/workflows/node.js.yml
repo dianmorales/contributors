@@ -30,6 +30,7 @@ jobs:
     - run: npm test
     - name: login test registry    
       run: npx npm-cli-login -u test -p 1234 -e test@domain.test -r http://localhost:4873
+    - run: npm version prerelease --no-git-tag-version
     - name: test publish publish
       run: npm publish --registry http://localhost:4873
     - name: test info check
