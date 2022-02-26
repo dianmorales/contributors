@@ -1,9 +1,10 @@
 {
   "name": "@dianmora/contributors",
   "version": "2.0.2",
-  "description": "",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "description": "retrieve all contributors",
+  "type": "module",
+  "exports": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "lint": "eslint .",
     "build": "tsc",
