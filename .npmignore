@@ -2,3 +2,5 @@ src/
 test/
 .vscode/
 .github/
+dev.js
+tsconfig.json
