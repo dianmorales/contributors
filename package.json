@@ -11,7 +11,7 @@
   },
   "keywords": ["github", "api", "contributors"],
   "author": "dianmorales@gmail.com",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@octokit/auth-app": "3.6.1",
     "@octokit/rest": "18.12.0",
@@ -24,8 +24,5 @@
     "vitest": "0.5.7",
     "nock": "^13.0.6",
     "typescript": "4.5.5"
-  },
-  "files": [
-    "src/index.js"
-  ]
+  }
 }
