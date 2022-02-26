@@ -34,4 +34,4 @@ jobs:
     - name: test publish publish
       run: npm publish --registry http://localhost:4873
     - name: test info check
-      run: npm info e2e-ci-example-gh-actions --json --registry http://localhost:4873      
+      run: npm info @dianmora/contributors --json --registry http://localhost:4873      
