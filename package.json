@@ -1,6 +1,6 @@
 {
   "name": "@dianmora/contributors",
-  "version": "2.0.2",
+  "version": "3.0.0",
   "description": "retrieve all contributors",
   "type": "module",
   "exports": "./dist/index.js",
