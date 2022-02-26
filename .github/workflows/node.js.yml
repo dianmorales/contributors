@@ -26,7 +26,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - run: npm ci    
     - run: npm run lint
-    - run: npm build    
+    - run: npm run build    
     - run: npm test
     - name: login test registry    
       run: npx npm-cli-login -u test -p 1234 -e test@domain.test -r http://localhost:4873
