@@ -38,9 +38,9 @@ test("repositories test", async () => {
   const listContributors = await contributors({
     token: "12345",
     organization: "organization1",
-    excludebots: [],
+    excludedAccounts: [],
   });
-  expect(listContributors).toHaveLength(1);
+  expect(listContributors.contributors).toHaveLength(1);
 }, 100);
 
 test("contributors test exclude bots", async () => {
@@ -109,11 +109,11 @@ test("contributors test exclude bots", async () => {
   const listContributors = await contributors({
     token: "12345",
     organization: "organization1",
-    excludebots: ["user-bot"],
+    excludedAccounts: ["user-bot"],
   });
-  expect(listContributors).toHaveLength(2);
-  expect(listContributors[0].login).not.toBe("user-bot");
-  expect(listContributors[1].login).not.toBe("user-bot");
+  expect(listContributors.contributors).toHaveLength(2);
+  expect(listContributors.contributors[0].login).not.toBe("user-bot");
+  expect(listContributors.contributors[1].login).not.toBe("user-bot");
 }, 100);
 
 test("Sum of all Contributions and sorted Desc", async () => {
@@ -182,13 +182,13 @@ test("Sum of all Contributions and sorted Desc", async () => {
   const listContributors = await contributors({
     token: "12345",
     organization: "organization1",
-    excludebots: ["user-bot"],
+    excludedAccounts: ["user-bot"],
   });
-  expect(listContributors).toHaveLength(2);
-  expect(listContributors[0].login).toBe("user2");
-  expect(listContributors[0].contributions).toBe(20);
-  expect(listContributors[1].login).toBe("user1");
-  expect(listContributors[1].contributions).toBe(19);
+  expect(listContributors.contributors).toHaveLength(2);
+  expect(listContributors.contributors[0].login).toBe("user2");
+  expect(listContributors.contributors[0].contributions).toBe(20);
+  expect(listContributors.contributors[1].login).toBe("user1");
+  expect(listContributors.contributors[1].contributions).toBe(19);
 }, 100);
 
 test("Group repositories by contributor", async () => {
@@ -252,18 +252,17 @@ test("Group repositories by contributor", async () => {
   const listContributors = await contributors({
     token: "12345",
     organization: "organization1",
-    excludebots: [],
+    excludedAccounts: [],
   });
+  expect(listContributors.contributors).toHaveLength(2);
+  expect(listContributors.contributors[0].login).toBe("user2");
+  expect(listContributors.contributors[0].repositories.length).toBe(1);
+  expect(listContributors.contributors[0].repositories[0]).toBe("repository1");
 
-  expect(listContributors).toHaveLength(2);
-  expect(listContributors[0].login).toBe("user2");
-  expect(listContributors[0].repositories.length).toBe(1);
-  expect(listContributors[0].repositories[0].name).toBe("repository1");
-
-  expect(listContributors[1].login).toBe("user1");
-  expect(listContributors[1].repositories.length).toBe(2);
-  expect(listContributors[1].repositories[0].name).toBe("repository2");
-  expect(listContributors[1].repositories[1].name).toBe("repository1");
+  expect(listContributors.contributors[1].login).toBe("user1");
+  expect(listContributors.contributors[1].repositories.length).toBe(2);
+  expect(listContributors.contributors[1].repositories[0]).toBe("repository1");
+  expect(listContributors.contributors[1].repositories[1]).toBe("repository2");
 }, 100);
 
 test("Sort repositories by number of contributions desc", async () => {
@@ -327,17 +326,13 @@ test("Sort repositories by number of contributions desc", async () => {
   const listContributors = await contributors({
     token: "12345",
     organization: "organization1",
-    excludebots: [],
   });
-  expect(listContributors).toHaveLength(2);
-  expect(listContributors[0].login).toBe("user1");
-  expect(listContributors[0].repositories.length).toBe(2);
-  expect(listContributors[0].repositories[0].contributions).toBe(15);
-  expect(listContributors[0].repositories[1].contributions).toBe(4);
+  expect(listContributors.contributors).toHaveLength(2);
+  expect(listContributors.contributors[0].login).toBe("user1");
+  expect(listContributors.contributors[0].repositories.length).toBe(2);
 
-  expect(listContributors[1].login).toBe("user2");
-  expect(listContributors[1].repositories.length).toBe(1);
-  expect(listContributors[1].repositories[0].contributions).toBe(10);
+  expect(listContributors.contributors[1].login).toBe("user2");
+  expect(listContributors.contributors[1].repositories.length).toBe(1);
 }, 100);
 
 test("test Contributors properties", async () => {
@@ -373,27 +368,14 @@ test("test Contributors properties", async () => {
   const listContributors = await contributors({
     token: "12345",
     organization: "organization1",
-    excludebots: [],
+    excludedAccounts: [],
   });
-  expect(listContributors).toHaveLength(1);
-  expect(listContributors[0].login).toBe("user1");
-  expect(listContributors[0].id).toBe(558752);
-  expect(listContributors[0].contributions).toBe(44);
-  expect(listContributors[0].repositories.length).toBe(1);
-  expect(listContributors[0].repositories[0].name).toBe("repository1");
-  expect(listContributors[0].repositories[0].contributions).toBe(44);
-  expect(listContributors[0].repositories[0].full_name).toBe(
-    "organization1/repository1"
-  );
-  expect(listContributors[0].repositories[0].html_url).toBe(
-    "https://github.com/organization1/repository1"
-  );
-  expect(listContributors[0].repositories[0].description).toBe(
-    "📦🔐A lightweight private proxy registry build in Node.js"
-  );
-  expect(listContributors[0].repositories[0].watchers).toBe(10);
-  expect(listContributors[0].repositories[0].staergezers).toBe(120);
-  expect(listContributors[0].repositories[0].archived).toBeFalsy();
+  expect(listContributors.contributors).toHaveLength(1);
+  expect(listContributors.contributors[0].login).toBe("user1");
+  expect(listContributors.contributors[0].id).toBe(558752);
+  expect(listContributors.contributors[0].contributions).toBe(44);
+  expect(listContributors.contributors[0].repositories.length).toBe(1);
+  expect(listContributors.contributors[0].repositories[0]).toBe("repository1");
 }, 100);
 
 test("test repositories without contributors", async () => {
@@ -421,9 +403,9 @@ test("test repositories without contributors", async () => {
   const listContributors = await contributors({
     token: "12345",
     organization: "organization1",
-    excludebots: [],
+    excludedAccounts: [],
   });
-  expect(listContributors).toHaveLength(0);
+  expect(listContributors.contributors).toHaveLength(0);
 }, 100);
 
 test("repositories test", async () => {
@@ -458,9 +440,9 @@ test("repositories test", async () => {
   const listContributors = await contributors({
     token: "12345",
     organization: "organization1",
-    excludebots: [],
+    excludedAccounts: [],
   });
-  expect(listContributors).toHaveLength(1);
+  expect(listContributors.contributors).toHaveLength(1);
 }, 100);
 
 test("repositories test", async () => {
@@ -495,7 +477,7 @@ test("repositories test", async () => {
   const listContributors = await contributors({
     token: "12345",
     organization: "organization1",
-    excludebots: [],
+    excludedAccounts: [],
   });
-  expect(listContributors).toHaveLength(1);
+  expect(listContributors.contributors).toHaveLength(1);
 }, 100);

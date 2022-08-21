@@ -43,23 +43,21 @@ type Result = {
   full_name: string;
   html_url: string;
   description: string;
-  watchers: string[];
-  staergezers: number;
   archived: boolean;
 };
 
 export default async function contributors({
   token,
   organization,
-  excludebots = [],
+  excludedAccounts = [],
   allowFork = true,
   allowPrivateRepo = true,
 }: {
   token: string;
   organization: string;
-  excludebots: string[];
-  allowFork: boolean;
-  allowPrivateRepo: boolean;
+  excludedAccounts?: string[];
+  allowFork?: boolean;
+  allowPrivateRepo?: boolean;
 }) {
   const octokit = new Octokit({ auth: token });
   // Repositories for an Organization
@@ -71,9 +69,7 @@ export default async function contributors({
   );
   debug("repositories %o", repositories.length);
 
-  // @ts-ignore
-  const contributors = repositories.reduce(async (acc, currentValue) => {
-    let collection = await acc;
+  const mappedRepos = repositories.map((repo) => {
     const {
       name,
       owner: { login },
@@ -81,13 +77,35 @@ export default async function contributors({
       html_url,
       description,
       stargazers_count,
-      watchers,
+      archived,
+    } = repo;
+    return {
+      name,
+      login,
+      full_name,
+      html_url,
+      description,
+      stargazers_count,
+      archived,
+    };
+  });
+
+  // @ts-ignore
+  const contributors = mappedRepos.reduce(async (acc, currentValue) => {
+    let collection = await acc;
+    const {
+      name,
+      login,
+      full_name,
+      html_url,
+      description,
+      stargazers_count,
       archived,
     } = currentValue;
     debug("name %o", name);
     debug("login %o", login);
     debug("full_name %o", full_name);
-    debug("filter bots: %o", excludebots);
+    debug("filter bots: %o", excludedAccounts);
 
     // Contributors by a specific repository
     const listContributors: any[] = [];
@@ -101,6 +119,7 @@ export default async function contributors({
         page,
         per_page: RESULTS_MAX_PER_PAGE,
       });
+
       if (result.data.length > 0) {
         debug("%s new contributors found for %s", result.data.length, name);
         listContributors.push(...result.data);
@@ -123,12 +142,11 @@ export default async function contributors({
           html_url: html_url,
           description: description,
           stargazers_count: stargazers_count,
-          watchers: watchers,
           archived: archived,
         };
       })
       .filter((item) => typeof item.login !== "undefined")
-      .filter((item) => !excludebots.includes(item.login));
+      .filter((item) => !excludedAccounts.includes(item.login));
     // @ts-ignore
     collection = collection.concat(contributors);
     return collection;
@@ -136,7 +154,7 @@ export default async function contributors({
 
   // @ts-ignore
   const resolvedContributors: any[] = await contributors;
-  debug("resolvedContributors:  %o", resolvedContributors.length);
+
   // Group Contributors inside an Organization
   const groupedContributors = resolvedContributors.reduce(
     (acc, currentValue) => {
@@ -145,19 +163,8 @@ export default async function contributors({
         const currentContributions = acc[currentValue.login].contributions;
         let currentRepositories: Result[] =
           acc[currentValue.login].repositories;
-        currentRepositories.push({
-          name: currentValue.repository,
-          contributions: currentValue.contributions,
-          full_name: currentValue.full_name,
-          html_url: currentValue.html_url,
-          description: currentValue.description,
-          watchers: currentValue.watchers,
-          staergezers: currentValue.stargazers_count,
-          archived: currentValue.archived,
-        });
-        currentRepositories = currentRepositories.sort((a: any, b: any) => {
-          return b.contributions - a.contributions;
-        });
+        currentRepositories.push(currentValue.repository);
+
         const newContributions =
           currentContributions + currentValue.contributions;
         acc[currentValue.login] = {
@@ -172,18 +179,7 @@ export default async function contributors({
           id: currentValue.id,
           login: currentValue.login,
           contributions: currentValue.contributions,
-          repositories: [
-            {
-              name: currentValue.repository,
-              contributions: currentValue.contributions,
-              full_name: currentValue.full_name,
-              html_url: currentValue.html_url,
-              description: currentValue.description,
-              watchers: currentValue.watchers,
-              staergezers: currentValue.stargazers_count,
-              archived: currentValue.archived,
-            },
-          ],
+          repositories: [currentValue.repository],
         };
       }
       return acc;
@@ -191,8 +187,12 @@ export default async function contributors({
     {}
   );
   const itemsValues = Object.values(groupedContributors);
-  const sortedValues = itemsValues.sort((a: any, b: any) => {
+  const sortedValues: any[] = itemsValues.sort((a: any, b: any) => {
     return b.contributions - a.contributions;
   });
-  return sortedValues;
+
+  return {
+    contributors: sortedValues,
+    repositories: mappedRepos,
+  };
 }
