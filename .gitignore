@@ -8,3 +8,4 @@ coverage/*
 example.js
 .vscode/launch.json
 dist/*
+contributors.json
