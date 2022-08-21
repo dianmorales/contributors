@@ -161,9 +161,11 @@ export default async function contributors({
       // if a contributor already exist and has contribute in other repositories
       if (acc[currentValue.login]) {
         const currentContributions = acc[currentValue.login].contributions;
-        let currentRepositories: Result[] =
-          acc[currentValue.login].repositories;
-        currentRepositories.push(currentValue.repository);
+        let currentRepositories: any[] = acc[currentValue.login].repositories;
+        currentRepositories.push({
+          name: currentValue.repository,
+          contributions: currentValue.contributions,
+        });
 
         const newContributions =
           currentContributions + currentValue.contributions;
@@ -179,7 +181,12 @@ export default async function contributors({
           id: currentValue.id,
           login: currentValue.login,
           contributions: currentValue.contributions,
-          repositories: [currentValue.repository],
+          repositories: [
+            {
+              name: currentValue.repository,
+              contributions: currentValue.contributions,
+            },
+          ],
         };
       }
       return acc;

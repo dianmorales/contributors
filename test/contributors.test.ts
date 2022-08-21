@@ -257,12 +257,18 @@ test("Group repositories by contributor", async () => {
   expect(listContributors.contributors).toHaveLength(2);
   expect(listContributors.contributors[0].login).toBe("user2");
   expect(listContributors.contributors[0].repositories.length).toBe(1);
-  expect(listContributors.contributors[0].repositories[0]).toBe("repository1");
+  expect(listContributors.contributors[0].repositories[0].name).toBe(
+    "repository1"
+  );
 
   expect(listContributors.contributors[1].login).toBe("user1");
   expect(listContributors.contributors[1].repositories.length).toBe(2);
-  expect(listContributors.contributors[1].repositories[0]).toBe("repository1");
-  expect(listContributors.contributors[1].repositories[1]).toBe("repository2");
+  expect(listContributors.contributors[1].repositories[0].name).toBe(
+    "repository1"
+  );
+  expect(listContributors.contributors[1].repositories[1].name).toBe(
+    "repository2"
+  );
 }, 100);
 
 test("Sort repositories by number of contributions desc", async () => {
@@ -375,7 +381,9 @@ test("test Contributors properties", async () => {
   expect(listContributors.contributors[0].id).toBe(558752);
   expect(listContributors.contributors[0].contributions).toBe(44);
   expect(listContributors.contributors[0].repositories.length).toBe(1);
-  expect(listContributors.contributors[0].repositories[0]).toBe("repository1");
+  expect(listContributors.contributors[0].repositories[0].name).toBe(
+    "repository1"
+  );
 }, 100);
 
 test("test repositories without contributors", async () => {
